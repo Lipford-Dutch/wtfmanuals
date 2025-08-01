@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WTFManuals – Turn chaos into clarity</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-container">
+      <div class="logo">
+        <img src="../1_BrandAssets/logo.png" alt="WTFManuals Logo" height="40">
+        <span>WTFManuals</span>
+      </div>
+      <nav id="nav-menu" class="nav-menu">
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="#signup" class="btn-primary">Start Free</a></li>
+        </ul>
+      </nav>
+      <button class="nav-toggle" aria-label="Toggle navigation" onclick="toggleNav()">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <h1>Turn Chaos Into Clarity</h1>
+        <p>AI‑powered manuals that blend official instructions with real‑world tips – all in one place.</p>
+        <a href="#signup" class="btn-primary">Get Started Free</a>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2>Features</h2>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <h3>Smart Ingestion</h3>
+            <p>Upload PDFs, docs or images. We parse and structure your manuals automatically.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Community Enrichment</h3>
+            <p>Retrieve tips and troubleshooting from forums and social media to enrich your guides.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Interactive Guides</h3>
+            <p>Generate interactive web manuals with search, hyperlinks and multimedia.</p>
+          </div>
+          <div class="feature-item">
+            <h3>Video Script Export</h3>
+            <p>Turn your manuals into detailed video scripts ready for production.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+      <div class="container">
+        <h2>Pricing</h2>
+        <div class="pricing-table">
+          <div class="pricing-plan">
+            <h3>Free</h3>
+            <p>$0 / month</p>
+            <ul>
+              <li>5 manual uploads</li>
+              <li>Community tips</li>
+              <li>Email support</li>
+            </ul>
+            <a href="#signup" class="btn-secondary">Choose Free</a>
+          </div>
+          <div class="pricing-plan featured">
+            <h3>Pro</h3>
+            <p>$25 / month</p>
+            <ul>
+              <li>Unlimited manuals</li>
+              <li>Video script export</li>
+              <li>Priority support</li>
+            </ul>
+            <a href="#signup" class="btn-primary">Choose Pro</a>
+          </div>
+          <div class="pricing-plan">
+            <h3>Enterprise</h3>
+            <p>Contact Us</p>
+            <ul>
+              <li>Dedicated success manager</li>
+              <li>Custom integrations</li>
+              <li>Team collaboration</li>
+            </ul>
+            <a href="#contact" class="btn-secondary">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <h2>Contact Us</h2>
+        <p>Have questions? Fill out the form below and we’ll get back to you.</p>
+        <form id="contact-form" action="#" method="post" onsubmit="submitForm(event)">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="4" required></textarea>
+          <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+        <p id="form-result" class="hidden"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-left">
+        <img src="../1_BrandAssets/logo.png" alt="WTFManuals Logo" height="30">
+        <p>© 2025 WTFManuals. All rights reserved.</p>
+      </div>
+      <nav class="footer-nav">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Policy</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

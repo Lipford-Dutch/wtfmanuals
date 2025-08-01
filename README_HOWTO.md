@@ -1,0 +1,33 @@
+# README: How to Use Your WTFManuals Launch System
+
+Congratulations on setting up WTFManuals.com! This package contains everything you need to launch your business, from strategy and planning documents to starter code, legal templates and CRM automation. This guide explains the folder structure and how to use each component.
+
+## Folder Structure
+
+- **1_BrandAssets/** – Logo (`logo.png`) and brand guidelines (`brand_guidelines.md`) to keep your visual identity consistent.
+- **2_BusinessPlan/** – Business plan, demographics & audience insights and supporting docs. These materials are friendly to banks, investors and team members.  
+- **3_Marketing/** – Your marketing strategy document detailing channels, tactics and best practices.  
+- **4_WebsiteKit/** – Website plan (`website_plan.md`) plus a `website_src/` folder containing starter HTML/CSS/JS code. Use this to build your SaaS landing page or migrate to a framework like Next.js.  
+- **5_PM_Materials/** – Project timeline and milestones (`project_timeline.md`) to guide development.  
+- **6_Financials/** – Simple financial forecast in CSV (`financial_forecast.csv`) with assumptions in `financial_assumptions.md`.  
+- **7_HR_Tax_Insurance/** – HR, tax and insurance guide to help you think about compliance and payroll matters.  
+- **8_LegalDocs/** – Templates for NDAs, privacy policy, terms of service, service agreements, founder/contractor/employment agreements, IP assignment and cookie/disclaimer pages. Replace placeholders with your details and have an attorney review.  
+- **9_CRM_and_Leads/** – CRM setup plan for Notion, lead generation strategy, outreach templates, automation flow and lead scoring model to help you track and nurture prospects.  
+
+## Getting Started
+1. **Define Your Brand:** Review `1_BrandAssets/brand_guidelines.md` and customise the colours, fonts or logo if needed. Use the provided `logo.png` in your materials.  
+2. **Refine Business Plan:** Open `2_BusinessPlan/business_plan.md` and adjust assumptions (market size, projections) to match your goals. Complete `demographics_and_audience.md` with your research.  
+3. **Marketing Execution:** Use `3_Marketing/marketing_strategy.md` to kick off your campaigns. Document tactics in Notion or your project management tool and assign owners.  
+4. **Build the Website:** Read `4_WebsiteKit/website_plan.md` for stack recommendations and structure. Explore `website_src/index.html` in a browser to see the starter landing page. Modify or extend it, or import into a React/Next.js project.  
+5. **Plan Your Development:** Follow the milestones in `5_PM_Materials/project_timeline.md` to manage the build. Adjust durations as your team and resources evolve.  
+6. **Track Finances:** Use `6_Financials/financial_forecast.csv` and `financial_assumptions.md` to model revenue and expenses. Import into a spreadsheet or accounting software for deeper analysis.  
+7. **Address HR & Legal:** Read `7_HR_Tax_Insurance/hr_tax_insurance_guide.md` to understand initial HR, tax and insurance tasks. Populate the legal templates in `8_LegalDocs/` with your company details; consult an attorney to finalise them.  
+8. **Set Up CRM & Leads:** Follow `9_CRM_and_Leads/CRM_Setup_Notion.md` to build your Notion CRM. Execute the strategies in `Lead_Gen_Strategy.md` and use the templates in `Templates.md` to reach out to prospects. Automate repetitive tasks using `Automation_Flow.md` and prioritise leads with `Lead_Scoring.md`.
+
+## Tips for Success
+- **Iterate often:** Your first version doesn’t need to be perfect; collect feedback and iterate.  
+- **Stay compliant:** Legal and tax obligations vary by region. Use the provided docs as a starting point but consult professionals.  
+- **Focus on value:** Build trust with customers by providing genuinely helpful content and addressing their pain points.  
+- **Leverage communities:** People love to share their DIY successes. Encourage users to contribute tips to your manuals and highlight community contributions.
+
+You now have a comprehensive toolkit to take WTFManuals.com from concept to launch. Stay organised, deliver value, and enjoy building!
