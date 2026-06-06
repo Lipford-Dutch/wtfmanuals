@@ -39,10 +39,10 @@ If Montserrat or Open Sans are unavailable, substitute with system sans‑serif 
 - Avoid overly stocky or generic imagery.  
 
 ### Do’s and Don’ts
-- ✅ Do maintain consistent color usage and spacing.  
-- ✅ Do keep messaging centred on user empowerment.  
-- ❌ Don’t crowd the logo or stretch it.  
-- ❌ Don’t overuse the accent colour; reserve it for CTAs.
+-  Do maintain consistent color usage and spacing.
+-  Do keep messaging centred on user empowerment.
+-  Don’t crowd the logo or stretch it.
+-  Don’t overuse the accent colour; reserve it for CTAs.
 
 ## Using These Assets
 The `logo.png` file in this folder can be placed on your website, documents, presentations and slides. For print, export at 300 dpi. Always maintain aspect ratio when resizing.
