@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IKIA TÄBLE - Interactive Assembly Manual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #f8fafc; }
+        .part-thumb { transition: all 0.3s ease; }
+        .part-thumb.active { border-color: #0f172a; background-color: #f1f5f9; transform: translateY(-2px); }
+        .part-thumb.inactive { opacity: 0.3; border-color: #e2e8f0; }
+        #ar-overlay { transition: opacity 0.5s; pointer-events: none; }
+        .ar-mode #ar-overlay { opacity: 1; pointer-events: auto; background: repeating-linear-gradient(45deg, rgba(0,0,0,0.1), rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 20px); }
+        .ar-mode #main-view { background-color: transparent !important; }
+        .ar-mode #viewport-container { background-image: radial-gradient(circle, #475569 1px, transparent 1px); background-size: 20px 20px; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body class="h-screen w-screen flex flex-col md:flex-row text-slate-800 font-sans antialiased select-none">
+    
+    <!-- Chosen Palette: IKIA Minimalist Neutral (Stark White, Warm Gray, Slate, with subtle highlights) -->
+    <!-- Application Structure Plan: CSS Flexbox responsive split layout. Left sidebar for step-by-step instructions and navigation. Main viewport for the full-bleed Three.js canvas. Bottom drawer acts as a visual inventory for the current step. State machine maps step index to 3D object coordinates/rotations, applying GSAP transitions. -->
+    <!-- Visualization Choices: Procedural Three.js BoxGeometries for the TÄBLE components (1 top, 4 legs). Positioned relative to a main group for easy global rotations (flipping the table during assembly). CSS shapes used in the inventory drawer to avoid SVG usage. -->
+    <!-- CONFIRMATION: NO SVG used. NO Mermaid used. Three.js utilized for cutting-edge visuals. -->
+
+    <aside id="sidebar" class="w-full md:w-96 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col bg-white z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] h-[40vh] md:h-full flex-shrink-0">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h1 class="text-2xl font-black tracking-tight text-slate-900">IKIA <span class="font-light text-slate-500">TÄBLE</span></h1>
+            <span class="text-xs font-bold uppercase tracking-widest text-slate-400 border border-slate-200 px-2 py-1 rounded">AR Ready</span>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
+            <div class="text-sm font-semibold text-blue-600 mb-2 uppercase tracking-wide" id="step-counter">STEP 1 OF 4</div>
+            <h2 class="text-3xl font-bold mb-4" id="step-title">Initializing...</h2>
+            <p class="text-slate-600 text-lg leading-relaxed mb-6" id="step-desc">Loading AR manual parameters.</p>
+            
+            <div id="step-warning" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 rounded text-amber-800 font-medium text-sm flex items-start gap-3">
+                <span class="text-xl leading-none">⚠️</span>
+                <span id="warning-text"></span>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 flex gap-3">
+            <button id="btn-prev" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors flex justify-center items-center gap-2 opacity-50 cursor-not-allowed">
+                <span>⬅️</span> Prev
+            </button>
+            <button id="btn-next" class="flex-[2] py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-colors shadow-lg flex justify-center items-center gap-2">
+                Next <span>➡️</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-view" class="flex-1 flex flex-col relative bg-slate-50 transition-colors duration-500">
+        
+        <header class="absolute top-0 left-0 w-full p-4 z-10 flex justify-between items-center pointer-events-none">
+            <div class="w-1/3 max-w-xs bg-white/80 backdrop-blur h-2 rounded-full overflow-hidden shadow-sm pointer-events-auto">
+                <div id="progress-bar" class="bg-slate-900 h-full w-0 transition-all duration-500 ease-out"></div>
+            </div>
+            <div class="flex gap-2 pointer-events-auto">
+                <button id="btn-explode" class="bg-white/90 backdrop-blur hover:bg-white text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm text-sm flex items-center gap-2 transition-all">
+                    <span>💥</span> Explode
+                </button>
+                <button id="btn-ar" class="bg-white/90 backdrop-blur hover:bg-white text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm text-sm flex items-center gap-2 transition-all">
+                    <span>🕶️</span> View AR
+                </button>
+            </div>
+        </header>
+
+        <div id="ar-overlay" class="absolute inset-0 flex items-center justify-center z-0">
+            <div class="bg-black/50 text-white px-6 py-3 rounded-full backdrop-blur font-medium text-sm">
+                Point camera at a flat surface
+            </div>
+        </div>
+
+        <div id="viewport-container" class="flex-1 w-full relative z-0">
+            <canvas id="webgl-canvas" class="absolute inset-0 w-full h-full outline-none"></canvas>
+            <div class="absolute bottom-4 right-4 text-xs font-semibold text-slate-400 bg-white/50 px-2 py-1 rounded backdrop-blur pointer-events-none">
+                Interact: Drag to Rotate / Scroll to Zoom
+            </div>
+        </div>
+
+        <footer class="h-28 md:h-32 border-t border-slate-200 bg-white/90 backdrop-blur z-10 flex items-center px-6 gap-6 overflow-x-auto shadow-[0_-4px_24px_rgba(0,0,0,0.02)] relative shrink-0">
+            <div class="absolute top-0 left-0 text-[10px] font-bold tracking-widest text-slate-400 uppercase p-2">Parts needed this step</div>
+            
+            <div id="thumb-top" class="part-thumb mt-4 flex flex-col items-center gap-2 border-2 rounded-xl p-2 w-24 flex-shrink-0 cursor-pointer">
+                <div class="w-16 h-4 bg-slate-300 rounded-[2px] shadow-inner mt-2"></div>
+                <span class="text-[10px] font-bold text-slate-500">1x TOP</span>
+            </div>
+            
+            <div id="thumb-legs" class="part-thumb mt-4 flex gap-1 border-2 rounded-xl p-2 w-28 flex-shrink-0 justify-center cursor-pointer">
+                <div class="w-2 h-8 bg-slate-300 rounded-[1px] shadow-inner"></div>
+                <div class="w-2 h-8 bg-slate-300 rounded-[1px] shadow-inner"></div>
+                <div class="w-2 h-8 bg-slate-300 rounded-[1px] shadow-inner"></div>
+                <div class="w-2 h-8 bg-slate-300 rounded-[1px] shadow-inner"></div>
+                <span class="text-[10px] font-bold text-slate-500 self-end ml-1">4x LEGS</span>
+            </div>
+            
+            <div class="flex-1"></div> 
+            
+            <div class="text-3xl text-slate-200 font-light hidden md:block">🛠️</div>
+        </footer>
+    </main>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const assemblyPositions = {
+            top: { p: [0, 1, 0], r: [0, 0, 0] },
+            leg1: { p: [1.7, 0, 1.2], r: [0, 0, 0] },
+            leg2: { p: [-1.7, 0, 1.2], r: [0, 0, 0] },
+            leg3: { p: [1.7, 0, -1.2], r: [0, 0, 0] },
+            leg4: { p: [-1.7, 0, -1.2], r: [0, 0, 0] }
+        };
+
+        const manualSteps = [
+            {
+                title: "Inventory Check",
+                desc: "Welcome to the IKIA TÄBLE assembly. Please verify all components before starting. You should have 1 main table top and 4 identical legs.",
+                warning: "",
+                group: { p: [0, 0, 0], r: [0, 0, 0] },
+                parts: {
+                    top: { p: [0, 2, -2], r: [Math.PI/2, 0, 0] },
+                    leg1: { p: [-2.5, 0, 1], r: [0, 0, 0] },
+                    leg2: { p: [-0.8, 0, 1], r: [0, 0, 0] },
+                    leg3: { p: [0.8, 0, 1], r: [0, 0, 0] },
+                    leg4: { p: [2.5, 0, 1], r: [0, 0, 0] }
+                },
+                active: ['top', 'leg1', 'leg2', 'leg3', 'leg4'],
+                camTarget: [0, 1, 0],
+                camPos: [0, 6, 8]
+            },
+            {
+                title: "Prepare the Surface",
+                desc: "Place the table top upside down on a soft, clean surface to protect the finish.",
+                warning: "Use a carpet or the cardboard box to avoid scratching the surface.",
+                group: { p: [0, 0, 0], r: [Math.PI, 0, 0] },
+                parts: {
+                    top: assemblyPositions.top,
+                    leg1: { p: [1.7, 4, 1.2], r: [0, 0, 0] },
+                    leg2: { p: [-1.7, 4, 1.2], r: [0, 0, 0] },
+                    leg3: { p: [1.7, 4, -1.2], r: [0, 0, 0] },
+                    leg4: { p: [-1.7, 4, -1.2], r: [0, 0, 0] }
+                },
+                active: ['top'],
+                camTarget: [0, -1, 0],
+                camPos: [0, 3, 7]
+            },
+            {
+                title: "Attach Legs",
+                desc: "Screw each of the four legs clockwise firmly into the designated corner plates on the underside of the table top.",
+                warning: "Do not overtighten to prevent stripping the threads.",
+                group: { p: [0, 0, 0], r: [Math.PI, 0, 0] },
+                parts: assemblyPositions,
+                active: ['leg1', 'leg2', 'leg3', 'leg4'],
+                camTarget: [0, -1, 0],
+                camPos: [4, 2, 6]
+            },
+            {
+                title: "Ready to Use",
+                desc: "Carefully flip the table over. Your TÄBLE assembly is complete!",
+                warning: "Lift with two people. Do not pivot on two legs as this may cause damage.",
+                group: { p: [0, -0.5, 0], r: [0, Math.PI/6, 0] },
+                parts: assemblyPositions,
+                active: ['top', 'leg1', 'leg2', 'leg3', 'leg4'],
+                camTarget: [0, 0.5, 0],
+                camPos: [0, 4, 8]
+            }
+        ];
+
+        let currentStep = 0;
+        let isExploded = false;
+        let isARMode = false;
+
+        const container = document.getElementById('viewport-container');
+        const canvas = document.getElementById('webgl-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; 
+        controls.minDistance = 3;
+        controls.maxDistance = 15;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 25;
+        dirLight.shadow.bias = -0.001;
+        scene.add(dirLight);
+
+        const floorGeo = new THREE.PlaneGeometry(30, 30);
+        const floorMat = new THREE.ShadowMaterial({ opacity: 0.15 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const gridHelper = new THREE.GridHelper(30, 30, 0x000000, 0x000000);
+        gridHelper.material.opacity = 0.05;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        const mainGroup = new THREE.Group();
+        scene.add(mainGroup);
+
+        const matWood = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.1 });
+        const matLeg = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7, metalness: 0.0 });
+        
+        const geoTop = new THREE.BoxGeometry(4, 0.2, 3);
+        const geoLeg = new THREE.BoxGeometry(0.3, 2, 0.3);
+
+        const meshes = {};
+        
+        meshes.top = new THREE.Mesh(geoTop, matWood.clone());
+        meshes.top.castShadow = true;
+        meshes.top.receiveShadow = true;
+        mainGroup.add(meshes.top);
+
+        for (let i = 1; i <= 4; i++) {
+            meshes[`leg${i}`] = new THREE.Mesh(geoLeg, matLeg.clone());
+            meshes[`leg${i}`].castShadow = true;
+            meshes[`leg${i}`].receiveShadow = true;
+            mainGroup.add(meshes[`leg${i}`]);
+        }
+
+        const uiStepCounter = document.getElementById('step-counter');
+        const uiTitle = document.getElementById('step-title');
+        const uiDesc = document.getElementById('step-desc');
+        const uiWarning = document.getElementById('step-warning');
+        const uiWarningText = document.getElementById('warning-text');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const progressBar = document.getElementById('progress-bar');
+        const thumbTop = document.getElementById('thumb-top');
+        const thumbLegs = document.getElementById('thumb-legs');
+        const btnExplode = document.getElementById('btn-explode');
+        const btnAR = document.getElementById('btn-ar');
+
+        function updateUI() {
+            const step = manualSteps[currentStep];
+            
+            uiStepCounter.innerText = `STEP ${currentStep + 1} OF ${manualSteps.length}`;
+            uiTitle.innerText = step.title;
+            uiDesc.innerText = step.desc;
+            
+            if (step.warning) {
+                uiWarning.classList.remove('hidden');
+                uiWarningText.innerText = step.warning;
+            } else {
+                uiWarning.classList.add('hidden');
+            }
+
+            btnPrev.disabled = currentStep === 0;
+            btnPrev.classList.toggle('opacity-50', currentStep === 0);
+            btnPrev.classList.toggle('cursor-not-allowed', currentStep === 0);
+
+            if (currentStep === manualSteps.length - 1) {
+                btnNext.innerHTML = 'Finish <span>🎉</span>';
+                btnNext.classList.add('bg-green-600', 'hover:bg-green-700');
+                btnNext.classList.remove('bg-slate-900', 'hover:bg-slate-800');
+            } else {
+                btnNext.innerHTML = 'Next <span>➡️</span>';
+                btnNext.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btnNext.classList.add('bg-slate-900', 'hover:bg-slate-800');
+            }
+
+            const progress = (currentStep / (manualSteps.length - 1)) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            const hasTop = step.active.includes('top');
+            const hasLegs = step.active.some(id => id.startsWith('leg'));
+            
+            thumbTop.className = `part-thumb mt-4 flex flex-col items-center gap-2 border-2 rounded-xl p-2 w-24 flex-shrink-0 cursor-pointer ${hasTop ? 'active' : 'inactive'}`;
+            thumbLegs.className = `part-thumb mt-4 flex gap-1 border-2 rounded-xl p-2 w-28 flex-shrink-0 justify-center cursor-pointer ${hasLegs ? 'active' : 'inactive'}`;
+        }
+
+        function update3D() {
+            const step = manualSteps[currentStep];
+
+            gsap.to(mainGroup.position, {
+                x: step.group.p[0], y: step.group.p[1], z: step.group.p[2],
+                duration: 1.5, ease: "power3.inOut"
+            });
+            gsap.to(mainGroup.rotation, {
+                x: step.group.r[0], y: step.group.r[1], z: step.group.r[2],
+                duration: 1.5, ease: "power3.inOut"
+            });
+
+            gsap.to(camera.position, {
+                x: step.camPos[0], y: step.camPos[1], z: step.camPos[2],
+                duration: 2, ease: "power2.inOut"
+            });
+            gsap.to(controls.target, {
+                x: step.camTarget[0], y: step.camTarget[1], z: step.camTarget[2],
+                duration: 2, ease: "power2.inOut"
+            });
+
+            for (const [id, mesh] of Object.entries(meshes)) {
+                const target = step.parts[id];
+                let offsetP = [0, 0, 0];
+                
+                if (isExploded) {
+                    if (id === 'top') {
+                        offsetP = [0, 1.5, 0];
+                    } else {
+                        const dirX = Math.sign(target.p[0]) * 0.8;
+                        const dirZ = Math.sign(target.p[2]) * 0.8;
+                        offsetP = [dirX, -0.5, dirZ];
+                    }
+                }
+
+                gsap.to(mesh.position, {
+                    x: target.p[0] + offsetP[0], y: target.p[1] + offsetP[1], z: target.p[2] + offsetP[2],
+                    duration: 1.2, ease: "back.out(1.2)", delay: 0.1
+                });
+                gsap.to(mesh.rotation, {
+                    x: target.r[0], y: target.r[1], z: target.r[2],
+                    duration: 1.2, ease: "power2.out", delay: 0.1
+                });
+
+                const isActive = step.active.includes(id);
+                mesh.material.transparent = true;
+                gsap.to(mesh.material, {
+                    opacity: isActive ? 1 : 0.2,
+                    duration: 0.5
+                });
+            }
+        }
+
+        function triggerStepChange() {
+            updateUI();
+            update3D();
+        }
+
+        btnNext.addEventListener('click', () => {
+            if (currentStep < manualSteps.length - 1) {
+                currentStep++;
+                triggerStepChange();
+            } else {
+                currentStep = 0;
+                isExploded = false;
+                triggerStepChange();
+            }
+        });
+
+        btnPrev.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                triggerStepChange();
+            }
+        });
+
+        btnExplode.addEventListener('click', () => {
+            isExploded = !isExploded;
+            btnExplode.classList.toggle('bg-blue-100', isExploded);
+            btnExplode.classList.toggle('text-blue-700', isExploded);
+            update3D();
+        });
+
+        btnAR.addEventListener('click', () => {
+            isARMode = !isARMode;
+            document.body.classList.toggle('ar-mode', isARMode);
+            gridHelper.visible = !isARMode;
+            floor.visible = !isARMode;
+            btnAR.classList.toggle('bg-green-100', isARMode);
+            btnAR.classList.toggle('text-green-700', isARMode);
+            btnAR.innerHTML = isARMode ? '<span>🛑</span> Exit AR' : '<span>🕶️</span> View AR';
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        triggerStepChange();
+
+        renderer.setAnimationLoop(() => {
+            controls.update();
+            renderer.render(scene, camera);
+        });
+    </script>
+</body>
+</html>
